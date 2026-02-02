@@ -1,10 +1,18 @@
-# PST Merge Tool
+# Free PST Merge Tool for Outlook
 
-Enterprise-grade Windows tool to merge multiple PST files into a single master PST. Designed for recovering large mailboxes.
+**The ultimate open-source utility to merge, combine, and join multiple Outlook PST files into a single master file.**  
+*Completely free, no size limits, and enterprise-grade reliability.*
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-Windows_10%20%7C%2011%20%7C%20Server-blue.svg)
+![Outlook](https://img.shields.io/badge/Outlook-2013%20%7C%202016%20%7C%202019%20%7C%202021%20%7C%20365-orange.svg)
 ![.NET](https://img.shields.io/badge/.NET-4.5+-purple.svg)
+
+## Overview
+
+Are you struggling with scattered Outlook data files? **PST Merge Tool** is a powerful Windows application designed to consolidate unlimited `.pst` files into one managed archive. Unlike paid alternatives, this tool is 100% free and open source.
+
+It was built specifically to handle **large mailboxes (up to 2TB)** and includes a registry fix to bypass the default 50GB Outlook file size limit. Perfect for IT administrators performing backup recovery or users organizing years of emails.
 
 ## Features
 
