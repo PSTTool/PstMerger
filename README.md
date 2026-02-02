@@ -92,6 +92,6 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Author
 
-**Mithun** - [DataGuardNXT](https://dataguardnxt.com)
+**Mithun** 
 
-© 2026 DataGuardNXT. All Rights Reserved.
+© 2026 All Rights Reserved.
