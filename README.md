@@ -10,7 +10,7 @@
 
 ## Overview
 
-Are you struggling with scattered Outlook data files? **PST Merge Tool** is a powerful Windows application designed to consolidate unlimited `.pst` files into one managed archive. Unlike paid alternatives, this tool is 100% free and open source.
+**PST Merge Tool** is a powerful Windows application designed to consolidate unlimited `.pst` files into one managed archive. Unlike paid alternatives, this tool is 100% free and open source.
 
 It was built specifically to handle **large mailboxes (up to 2TB)** and includes a registry fix to bypass the default 50GB Outlook file size limit. Perfect for IT administrators performing backup recovery or users organizing years of emails.
 
