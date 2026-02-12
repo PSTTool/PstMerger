@@ -32,7 +32,7 @@ namespace PstMerger
                 }
 
                 // Get the destination root folder
-                destRoot = GetRootFolder(ns, destinationPst);
+                destRoot = GetRootFolder(ns, destinationPst, onProgress);
                 if (destRoot == null) throw new Exception("Could not find destination root.");
 
                 int count = 0;
@@ -65,7 +65,7 @@ namespace PstMerger
             try
             {
                 ns.AddStore(filePath);
-                sourceRoot = GetRootFolder(ns, filePath);
+                sourceRoot = GetRootFolder(ns, filePath, onProgress);
                 if (sourceRoot == null) return;
 
                 CopyFolders(sourceRoot, destRoot, ct, onProgress);
@@ -134,7 +134,15 @@ namespace PstMerger
                         
                         if (destSubFolder == null)
                         {
-                            destSubFolder = destFolders.Add(sourceSubFolder.Name, sourceSubFolder.DefaultItemType) as Outlook.Folder;
+                            try
+                            {
+                                destSubFolder = destFolders.Add(sourceSubFolder.Name, sourceSubFolder.DefaultItemType) as Outlook.Folder;
+                            }
+                            catch
+                            {
+                                // Fallback: Try adding without type (sometimes needed for Root folders or special stores)
+                                destSubFolder = destFolders.Add(sourceSubFolder.Name) as Outlook.Folder;
+                            }
                         }
                         break; // Success, exit retry loop
                     }
@@ -177,36 +185,65 @@ namespace PstMerger
             return null;
         }
 
-        private Outlook.Folder GetRootFolder(Outlook.NameSpace ns, string filePath)
+        private Outlook.Folder GetRootFolder(Outlook.NameSpace ns, string filePath, Action<int, string> onProgress)
         {
-            // First pass: Match by Store.FilePath (most reliable)
+            // 1. Find the Store object first
+            Outlook.Store targetStore = null;
+            foreach (Outlook.Store store in ns.Stores)
+            {
+                if (string.Equals(store.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetStore = store;
+                    break;
+                }
+            }
+
+            if (targetStore != null)
+            {
+                // Try to get PR_IPM_SUBTREE_ENTRYID (0x35E00102)
+                try
+                {
+                    const string PR_IPM_SUBTREE_ENTRYID = "http://schemas.microsoft.com/mapi/proptag/0x35E00102";
+                    object ipmProp = targetStore.PropertyAccessor.GetProperty(PR_IPM_SUBTREE_ENTRYID);
+                    
+                    string ipmEntryId = null;
+                    if (ipmProp is string)
+                    {
+                        ipmEntryId = (string)ipmProp;
+                    }
+                    else if (ipmProp is byte[])
+                    {
+                        byte[] bytes = (byte[])ipmProp;
+                        ipmEntryId = BitConverter.ToString(bytes).Replace("-", "");
+                    }
+                    
+                    if (!string.IsNullOrEmpty(ipmEntryId))
+                    {
+                        var ipmRoot = ns.GetFolderFromID(ipmEntryId, targetStore.StoreID) as Outlook.Folder;
+                        if (ipmRoot != null)
+                        {
+                            return ipmRoot;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                     // Log warning only if verbose logging is enabled or critical
+                     // onProgress(0, string.Format("Warning: Failed to resolve IPM Subtree: {0}. Implementation will fallback to Store Root.", ex.Message));
+                }
+
+                // Fallback to Store Root will happen in the legacy loop below
+            }
+
+            // Fallback: Legacy loop
             foreach (Outlook.Folder folder in ns.Folders)
             {
                 try
                 {
                     if (folder.Store != null)
                     {
-                        var store = folder.Store;
-                        if (string.Equals(store.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
-                        {
+                        if (string.Equals(folder.Store.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
                             return folder;
-                        }
-                    }
-                }
-                catch { }
-                Marshal.ReleaseComObject(folder);
-            }
-
-            // Fallback: Match by checking if filePath contains the folder name
-            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
-            foreach (Outlook.Folder folder in ns.Folders)
-            {
-                try
-                {
-                    if (string.Equals(folder.Name, fileNameWithoutExt, StringComparison.OrdinalIgnoreCase) ||
-                        folder.Name.IndexOf("Outlook Data File", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        return folder;
                     }
                 }
                 catch { }
