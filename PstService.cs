@@ -124,20 +124,32 @@ namespace PstMerger
                 Outlook.Folder destSubFolder = null;
                 Outlook.Folders destFolders = destFolder.Folders;
                 
-                // Try to find if subfolder exists in destination
-                try
+                // Try to find if subfolder exists in destination, with retry for transient COM errors
+                int maxRetries = 3;
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
                 {
-                    // Special handling for Default Folders (Inbox, Sent, etc)
-                    destSubFolder = FindFolderByName(destFolders, sourceSubFolder.Name);
-                    
-                    if (destSubFolder == null)
+                    try
                     {
-                        destSubFolder = destFolders.Add(sourceSubFolder.Name, sourceSubFolder.DefaultItemType) as Outlook.Folder;
+                        destSubFolder = FindFolderByName(destFolders, sourceSubFolder.Name);
+                        
+                        if (destSubFolder == null)
+                        {
+                            destSubFolder = destFolders.Add(sourceSubFolder.Name, sourceSubFolder.DefaultItemType) as Outlook.Folder;
+                        }
+                        break; // Success, exit retry loop
                     }
-                }
-                catch (Exception ex)
-                {
-                    onProgress(-1, string.Format("Error creating folder {0}: {1}", sourceSubFolder.Name, ex.Message));
+                    catch (Exception ex)
+                    {
+                        if (attempt == maxRetries)
+                        {
+                            onProgress(-1, string.Format("Error creating folder {0} after {1} attempts: {2}", sourceSubFolder.Name, maxRetries, ex.Message));
+                        }
+                        else
+                        {
+                            onProgress(-1, string.Format("Retry {0}/{1} for folder {2}: {3}", attempt, maxRetries, sourceSubFolder.Name, ex.Message));
+                            System.Threading.Thread.Sleep(500);
+                        }
+                    }
                 }
 
                 if (destSubFolder != null)
