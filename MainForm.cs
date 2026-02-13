@@ -15,6 +15,7 @@ namespace PstMerger
         public MainForm()
         {
             InitializeComponent();
+            this.Text = string.Format("PST Merge Tool v{0}", Application.ProductVersion);
             _pstService = new PstService();
             _logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, string.Format("PstMerge_{0:yyyyMMdd_HHmmss}.log", DateTime.Now));
             Log("Tool initialized. Enterprise Log started: " + _logFile);
@@ -197,7 +198,10 @@ namespace PstMerger
 
         private void btnAbout_Click(object sender, EventArgs e)
         {
-            string about = "PST Merge Tool v1.0\n\n" +
+            Version v = new Version(Application.ProductVersion);
+            string displayVersion = string.Format("{0}.{1}.{2}", v.Major, v.Minor, v.Build);
+
+            string about = string.Format("PST Merge Tool v{0}\n\n", displayVersion) +
                            "Developed by: Mithun\n" +
                            "© DataGuardNXT 2026\n\n" +
                            "All Rights Reserved.\n\n" +
